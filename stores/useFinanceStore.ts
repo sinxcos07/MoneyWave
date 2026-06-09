@@ -82,5 +82,44 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       db.recurringTransactions.toArray()
     ]);
     set({ profile, wallets, categories, transactions, budgets, recurring, isLoading: false });
+  },
+
+  addWallet: async (walletData: Omit<Wallet, 'id' | 'createdAt' | 'updatedAt' | 'currentBalance'>) => {
+    const newWallet: Wallet = {
+      ...walletData,
+      id: crypto.randomUUID(),
+      currentBalance: walletData.initialBalance,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    await db.wallets.add(newWallet);
+    await get().refreshData();
+  },
+  
+  deleteWallet: async (id: string) => {
+    await db.wallets.delete(id);
+    await get().refreshData();
+  },
+
+  addTransaction: async (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newTransaction: Transaction = {
+      ...data,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    
+    // Update Wallet Balance
+    const wallet = await db.wallets.get(data.walletId);
+    if (wallet) {
+      let newBalance = wallet.currentBalance;
+      if (data.type === 'income') newBalance += data.amount;
+      if (data.type === 'expense') newBalance -= data.amount;
+      // Transfer logic would require destination wallet, omitting for simplified V1 or handled differently
+      await db.wallets.update(wallet.id!, { currentBalance: newBalance });
+    }
+
+    await db.transactions.add(newTransaction);
+    await get().refreshData();
   }
 }));
