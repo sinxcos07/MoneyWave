@@ -40,6 +40,9 @@ interface FinanceState {
   deleteWallet: (id: string, fallbackWalletId?: string) => Promise<void>;
   addTransaction: (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  updateProfileName: (name: string) => Promise<void>;
+  importBackup: (backupData: any) => Promise<boolean>;
+  resetData: () => Promise<void>;
 }
 
 export const useFinanceStore = create<FinanceState>((set, get) => ({
@@ -164,5 +167,62 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
     await db.transactions.delete(id);
     await get().refreshData();
+  },
+
+  updateProfileName: async (name: string) => {
+    let profile = await db.profile.get(1);
+    if (profile) {
+      await db.profile.update(1, { name });
+    } else {
+      await db.profile.add({ name, themePreference: 'dark', currency: 'INR' });
+    }
+    await get().refreshData();
+  },
+
+  importBackup: async (backupData: any) => {
+    try {
+      if (!backupData.profile || !backupData.wallets || !backupData.categories) {
+        throw new Error("Invalid backup format");
+      }
+
+      // Clear existing
+      await Promise.all([
+        db.profile.clear(),
+        db.wallets.clear(),
+        db.transactions.clear(),
+        db.categories.clear(),
+        db.budgets.clear(),
+        db.recurringTransactions.clear(),
+        db.notifications.clear()
+      ]);
+
+      // Restore
+      if (backupData.profile.length > 0) await db.profile.bulkAdd(backupData.profile);
+      if (backupData.wallets.length > 0) await db.wallets.bulkAdd(backupData.wallets);
+      if (backupData.transactions.length > 0) await db.transactions.bulkAdd(backupData.transactions);
+      if (backupData.categories.length > 0) await db.categories.bulkAdd(backupData.categories);
+      if (backupData.budgets?.length > 0) await db.budgets.bulkAdd(backupData.budgets);
+      if (backupData.recurringTransactions?.length > 0) await db.recurringTransactions.bulkAdd(backupData.recurringTransactions);
+      if (backupData.notifications?.length > 0) await db.notifications.bulkAdd(backupData.notifications);
+
+      await get().refreshData();
+      return true;
+    } catch (error) {
+      console.error("Import failed:", error);
+      return false;
+    }
+  },
+
+  resetData: async () => {
+    await Promise.all([
+      db.profile.clear(),
+      db.wallets.clear(),
+      db.transactions.clear(),
+      db.categories.clear(),
+      db.budgets.clear(),
+      db.recurringTransactions.clear(),
+      db.notifications.clear()
+    ]);
+    await get().initializeData();
   }
 }));
