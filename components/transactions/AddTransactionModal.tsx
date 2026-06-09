@@ -77,7 +77,7 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId} required>
+              <Select value={categoryId} onValueChange={(val) => setCategoryId(val || "")} required>
                 <SelectTrigger className="rounded-xl bg-background/50">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
@@ -91,7 +91,7 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
             
             <div className="space-y-2">
               <Label>Wallet</Label>
-              <Select value={walletId} onValueChange={setWalletId} required>
+              <Select value={walletId} onValueChange={(val) => setWalletId(val || "")} required>
                 <SelectTrigger className="rounded-xl bg-background/50">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
@@ -117,7 +117,7 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
             </div>
             <div className="space-y-2">
               <Label>Payment Method</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <Select value={paymentMethod} onValueChange={(val) => setPaymentMethod(val || "")}>
                 <SelectTrigger className="rounded-xl bg-background/50">
                   <SelectValue />
                 </SelectTrigger>

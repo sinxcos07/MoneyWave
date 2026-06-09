@@ -37,10 +37,8 @@ export function AddWalletModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="rounded-2xl px-6 gap-2 shadow-lg shadow-primary/20">
-          <Plus className="w-4 h-4" /> Add Wallet
-        </Button>
+      <DialogTrigger render={<Button className="rounded-2xl px-6 gap-2 shadow-lg shadow-primary/20" />}>
+        <Plus className="w-4 h-4" /> Add Wallet
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] rounded-[32px] border-border/50 bg-card/80 backdrop-blur-2xl">
         <DialogHeader>
@@ -60,7 +58,7 @@ export function AddWalletModal() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="type">Wallet Type</Label>
-            <Select value={type} onValueChange={setType}>
+            <Select value={type} onValueChange={(val) => setType(val || "")}>
               <SelectTrigger className="rounded-xl bg-background/50">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>

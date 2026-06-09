@@ -36,7 +36,7 @@ export default function AnalyticsPage() {
                     cursor={{fill: 'var(--secondary)'}}
                     contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: 'var(--card)', color: 'var(--card-foreground)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}
                     itemStyle={{ color: 'var(--primary)' }}
-                    formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Spent']}
+                    formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Spent']}
                   />
                   <Bar dataKey="spent" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                 </BarChart>

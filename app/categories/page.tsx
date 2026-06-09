@@ -67,7 +67,7 @@ export default function CategoriesPage() {
                     ))}
                   </Pie>
                   <RechartsTooltip 
-                    formatter={(value: number) => `₹${value.toLocaleString('en-IN')}`}
+                    formatter={(value: any) => `₹${Number(value).toLocaleString('en-IN')}`}
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend verticalAlign="bottom" height={36} />

@@ -94,7 +94,7 @@ export default function Dashboard() {
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: 'var(--card)', color: 'var(--card-foreground)' }}
                     itemStyle={{ color: 'var(--expense)' }}
-                    formatter={(value: number) => [`₹${value}`, 'Spent']}
+                    formatter={(value: any) => [`₹${Number(value)}`, 'Spent']}
                   />
                   <Line type="monotone" dataKey="amount" stroke="var(--expense)" strokeWidth={3} dot={{r: 4, fill: 'var(--expense)', strokeWidth: 0}} activeDot={{r: 6}} />
                 </LineChart>

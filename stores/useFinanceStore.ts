@@ -36,6 +36,9 @@ interface FinanceState {
   
   initializeData: () => Promise<void>;
   refreshData: () => Promise<void>;
+  addWallet: (walletData: Omit<Wallet, 'id' | 'createdAt' | 'updatedAt' | 'currentBalance'>) => Promise<void>;
+  deleteWallet: (id: string) => Promise<void>;
+  addTransaction: (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
 }
 
 export const useFinanceStore = create<FinanceState>((set, get) => ({
