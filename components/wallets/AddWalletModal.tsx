@@ -60,7 +60,9 @@ export function AddWalletModal() {
             <Label htmlFor="type">Wallet Type</Label>
             <Select value={type} onValueChange={(val) => setType(val || "")}>
               <SelectTrigger className="rounded-xl bg-background/50">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder="Select type">
+                  {type || undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 <SelectItem value="Bank Account">Bank Account</SelectItem>

@@ -79,7 +79,9 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
               <Label className="font-medium">Category <span className="text-destructive">*</span></Label>
               <Select value={categoryId} onValueChange={(val) => setCategoryId(val || "")} required>
                 <SelectTrigger className="rounded-xl bg-background/50">
-                  <SelectValue placeholder="Select Category" />
+                  <SelectValue placeholder="Select Category">
+                    {categoryId ? categories.find(c => c.id === categoryId)?.name : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-xl max-h-48">
                   {filteredCategories.map(cat => (
@@ -93,7 +95,9 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
               <Label className="font-medium">Wallet <span className="text-destructive">*</span></Label>
               <Select value={walletId} onValueChange={(val) => setWalletId(val || "")} required>
                 <SelectTrigger className="rounded-xl bg-background/50">
-                  <SelectValue placeholder="Select Wallet" />
+                  <SelectValue placeholder="Select Wallet">
+                    {walletId ? wallets.find(w => w.id === walletId)?.name : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   {wallets.map(w => (
@@ -119,7 +123,9 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
               <Label className="font-medium">Payment Method</Label>
               <Select value={paymentMethod} onValueChange={(val) => setPaymentMethod(val || "")}>
                 <SelectTrigger className="rounded-xl bg-background/50">
-                  <SelectValue placeholder="Select Method" />
+                  <SelectValue placeholder="Select Method">
+                    {paymentMethod || undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   <SelectItem value="UPI">UPI</SelectItem>

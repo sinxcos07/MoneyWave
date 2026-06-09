@@ -79,7 +79,9 @@ export function DeleteWalletModal({ walletId }: { walletId: string }) {
                         <div className="mt-3 w-full">
                           <Select value={fallbackWalletId} onValueChange={(val) => setFallbackWalletId(val || "")}>
                             <SelectTrigger className="rounded-xl bg-background/50 border-destructive/20">
-                              <SelectValue placeholder="Select destination wallet" />
+                              <SelectValue placeholder="Select destination wallet">
+                                {fallbackWalletId ? otherWallets.find(w => w.id === fallbackWalletId)?.name : undefined}
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
                               {otherWallets.map(w => (
