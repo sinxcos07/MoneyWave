@@ -37,8 +37,9 @@ interface FinanceState {
   initializeData: () => Promise<void>;
   refreshData: () => Promise<void>;
   addWallet: (walletData: Omit<Wallet, 'id' | 'createdAt' | 'updatedAt' | 'currentBalance'>) => Promise<void>;
-  deleteWallet: (id: string) => Promise<void>;
+  deleteWallet: (id: string, fallbackWalletId?: string) => Promise<void>;
   addTransaction: (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
 }
 
 export const useFinanceStore = create<FinanceState>((set, get) => ({
@@ -99,7 +100,29 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     await get().refreshData();
   },
   
-  deleteWallet: async (id: string) => {
+  deleteWallet: async (id: string, fallbackWalletId?: string) => {
+    const walletTransactions = await db.transactions.where('walletId').equals(id).toArray();
+    
+    if (fallbackWalletId && fallbackWalletId !== id) {
+      const fallbackWallet = await db.wallets.get(fallbackWalletId);
+      if (fallbackWallet) {
+        for (const t of walletTransactions) {
+          await db.transactions.update(t.id!, { walletId: fallbackWalletId });
+        }
+        
+        const updatedFallbackTransactions = await db.transactions.where('walletId').equals(fallbackWalletId).toArray();
+        let newBalance = fallbackWallet.initialBalance;
+        for (const t of updatedFallbackTransactions) {
+          if (t.type === 'income') newBalance += t.amount;
+          if (t.type === 'expense') newBalance -= t.amount;
+        }
+        await db.wallets.update(fallbackWalletId, { currentBalance: newBalance });
+      }
+    } else {
+      const txIds = walletTransactions.map(t => t.id!).filter(Boolean) as string[];
+      await db.transactions.bulkDelete(txIds);
+    }
+
     await db.wallets.delete(id);
     await get().refreshData();
   },
@@ -123,6 +146,23 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     }
 
     await db.transactions.add(newTransaction);
+    await get().refreshData();
+  },
+
+  deleteTransaction: async (id: string) => {
+    const transaction = await db.transactions.get(id);
+    if (!transaction) return;
+
+    // Reverse Wallet Balance
+    const wallet = await db.wallets.get(transaction.walletId);
+    if (wallet) {
+      let newBalance = wallet.currentBalance;
+      if (transaction.type === 'income') newBalance -= transaction.amount;
+      if (transaction.type === 'expense') newBalance += transaction.amount;
+      await db.wallets.update(wallet.id!, { currentBalance: newBalance });
+    }
+
+    await db.transactions.delete(id);
     await get().refreshData();
   }
 }));

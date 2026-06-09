@@ -2,9 +2,20 @@
 
 import { useFinanceStore } from "@/stores/useFinanceStore";
 import { format } from "date-fns";
-import { ArrowDownLeft, ArrowUpRight, Search } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function TransactionsPage() {
   const transactions = useFinanceStore(state => state.transactions);
@@ -61,8 +72,25 @@ export default function TransactionsPage() {
                     {t.notes && <p className="text-xs text-muted-foreground mt-0.5">{t.notes}</p>}
                   </div>
                 </div>
-                <div className={`text-xl font-bold ${isIncome ? 'text-primary' : 'text-foreground'}`}>
-                  {isIncome ? '+' : '-'}₹{t.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                <div className="flex items-center gap-4">
+                  <div className={`text-xl font-bold ${isIncome ? 'text-primary' : 'text-foreground'}`}>
+                    {isIncome ? '+' : '-'}₹{t.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger render={<button className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors"><Trash2 className="w-4 h-4" /></button>} />
+                    <AlertDialogContent className="rounded-[32px] sm:max-w-[425px]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Transaction?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this transaction? This will automatically reverse the changes to your wallet balance.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => useFinanceStore.getState().deleteTransaction(t.id!)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             );

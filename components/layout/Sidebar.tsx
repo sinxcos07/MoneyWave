@@ -20,10 +20,7 @@ const navItems = [
   { name: "Transactions", href: "/transactions", icon: ArrowRightLeft },
   { name: "Wallets", href: "/wallets", icon: Wallet },
   { name: "Analytics", href: "/analytics", icon: PieChart },
-  { name: "Budgets", href: "/budgets", icon: Target },
   { name: "Categories", href: "/categories", icon: Grid },
-  { name: "Recurring", href: "/recurring", icon: Repeat },
-  { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

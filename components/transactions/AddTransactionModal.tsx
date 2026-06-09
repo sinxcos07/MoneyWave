@@ -51,7 +51,7 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
           <DialogTitle className="text-2xl font-bold tracking-tight">New Transaction</DialogTitle>
         </DialogHeader>
         
-        <Tabs value={type} onValueChange={(v) => setType(v as any)} className="w-full mt-4">
+        <Tabs value={type} onValueChange={(v) => { setType(v as any); setCategoryId(""); }} className="w-full mt-4">
           <TabsList className="grid w-full grid-cols-3 rounded-xl bg-background/50 p-1">
             <TabsTrigger value="expense" className="rounded-lg data-[state=active]:bg-destructive data-[state=active]:text-white">Expense</TabsTrigger>
             <TabsTrigger value="income" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">Income</TabsTrigger>
@@ -59,9 +59,9 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
           </TabsList>
         </Tabs>
 
-        <form onSubmit={handleSubmit} className="space-y-5 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="amount" className="font-medium">Amount (₹) <span className="text-destructive">*</span></Label>
             <Input 
               id="amount" 
               type="number"
@@ -76,10 +76,10 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label className="font-medium">Category <span className="text-destructive">*</span></Label>
               <Select value={categoryId} onValueChange={(val) => setCategoryId(val || "")} required>
                 <SelectTrigger className="rounded-xl bg-background/50">
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl max-h-48">
                   {filteredCategories.map(cat => (
@@ -90,10 +90,10 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
             </div>
             
             <div className="space-y-2">
-              <Label>Wallet</Label>
+              <Label className="font-medium">Wallet <span className="text-destructive">*</span></Label>
               <Select value={walletId} onValueChange={(val) => setWalletId(val || "")} required>
                 <SelectTrigger className="rounded-xl bg-background/50">
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select Wallet" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   {wallets.map(w => (
@@ -106,7 +106,7 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label className="font-medium">Date <span className="text-destructive">*</span></Label>
               <Input 
                 type="date" 
                 value={date} 
@@ -116,10 +116,10 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
               />
             </div>
             <div className="space-y-2">
-              <Label>Payment Method</Label>
+              <Label className="font-medium">Payment Method</Label>
               <Select value={paymentMethod} onValueChange={(val) => setPaymentMethod(val || "")}>
                 <SelectTrigger className="rounded-xl bg-background/50">
-                  <SelectValue />
+                  <SelectValue placeholder="Select Method" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   <SelectItem value="UPI">UPI</SelectItem>

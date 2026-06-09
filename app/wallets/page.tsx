@@ -2,8 +2,9 @@
 
 import { useFinanceStore } from "@/stores/useFinanceStore";
 import { AddWalletModal } from "@/components/wallets/AddWalletModal";
+import { DeleteWalletModal } from "@/components/wallets/DeleteWalletModal";
 import { motion } from "framer-motion";
-import { Landmark, Smartphone, Banknote, MoreVertical, Wallet } from "lucide-react";
+import { Landmark, Smartphone, Banknote, Wallet } from "lucide-react";
 
 export default function WalletsPage() {
   const wallets = useFinanceStore(state => state.wallets);
@@ -79,9 +80,7 @@ export default function WalletsPage() {
                       <p className="text-white/70 text-sm">{wallet.type}</p>
                     </div>
                   </div>
-                  <button className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
+                  <DeleteWalletModal walletId={wallet.id!} />
                 </div>
 
                 <div>
