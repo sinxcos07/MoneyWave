@@ -448,12 +448,12 @@ export default function AnalyticsPage() {
                         />
                       ))}
                     </Pie>
-                    <RechartsTooltip content={<CustomPieTooltip />} />
+                    <RechartsTooltip content={<CustomPieTooltip />} wrapperStyle={{ zIndex: 9999 }} />
                   </PieChart>
                 </ResponsiveContainer>
 
                 {/* Centered Total Expenses */}
-                <div className="absolute flex flex-col items-center justify-center pointer-events-none text-center">
+                <div className="absolute z-0 flex flex-col items-center justify-center pointer-events-none text-center">
                   <span className="text-2xl font-extrabold tracking-tight text-foreground">
                     ₹{totalExpenses.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                   </span>
