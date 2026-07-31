@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFinanceStore } from "@/stores/useFinanceStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { Transaction } from "@/db";
 
-export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+export function AddTransactionModal({ 
+  open, 
+  onOpenChange,
+  transaction
+}: { 
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  transaction?: Transaction;
+}) {
   const wallets = useFinanceStore(state => state.wallets);
   const categories = useFinanceStore(state => state.categories);
   const addTransaction = useFinanceStore(state => state.addTransaction);
@@ -22,6 +31,28 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("UPI");
+
+  useEffect(() => {
+    if (open) {
+      if (transaction) {
+        setType(transaction.type);
+        setAmount(transaction.amount.toString());
+        setCategoryId(transaction.categoryId);
+        setWalletId(transaction.walletId);
+        setDate(format(new Date(transaction.date), "yyyy-MM-dd"));
+        setNotes(transaction.notes || "");
+        setPaymentMethod(transaction.paymentMethod);
+      } else {
+        setType("expense");
+        setAmount("");
+        setCategoryId("");
+        setWalletId("");
+        setDate(format(new Date(), "yyyy-MM-dd"));
+        setNotes("");
+        setPaymentMethod("UPI");
+      }
+    }
+  }, [open, transaction]);
 
   const filteredCategories = categories.filter(c => c.type === type);
 
@@ -40,8 +71,6 @@ export function AddTransactionModal({ open, onOpenChange }: { open: boolean, onO
     });
 
     onOpenChange(false);
-    setAmount("");
-    setNotes("");
   };
 
   return (
