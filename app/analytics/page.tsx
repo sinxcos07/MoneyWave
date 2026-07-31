@@ -66,9 +66,6 @@ export default function AnalyticsPage() {
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all");
   const [dateRange, setDateRange] = useState<"all-time" | "this-month" | "last-30-days" | "this-year">("this-month");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  
-  // Recharts Doughnut hover states
-  const [activePieIndex, setActivePieIndex] = useState<number | null>(null);
 
   // 1. Filter Transactions based on Wallet and Date Range
   const filteredTransactions = useMemo(() => {
@@ -150,6 +147,13 @@ export default function AnalyticsPage() {
     }).sort((a, b) => b.amount - a.amount);
   }, [filteredTransactions, categories, totalExpenses]);
 
+  // Derived active index for Recharts Pie from selectedCategoryId
+  const activePieIndex = useMemo(() => {
+    if (selectedCategoryId === null) return null;
+    const idx = categorySpending.findIndex(c => c.id === selectedCategoryId);
+    return idx !== -1 ? idx : null;
+  }, [categorySpending, selectedCategoryId]);
+
   // 5. Calculate summary cards
   const summary = useMemo(() => {
     if (categorySpending.length === 0) {
@@ -190,7 +194,7 @@ export default function AnalyticsPage() {
     setSelectedCategoryId(prev => prev === categoryId ? null : categoryId);
   };
 
-  // Recharts Custom Active Slice Shape (Enlarge on hover)
+  // Recharts Custom Active Slice Shape (enlarged when selected via click/tap)
   const renderActiveShape = (props: any) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
     return (
@@ -199,7 +203,7 @@ export default function AnalyticsPage() {
           cx={cx}
           cy={cy}
           innerRadius={innerRadius - 2}
-          outerRadius={outerRadius + 6}
+          outerRadius={outerRadius + 8}
           startAngle={startAngle}
           endAngle={endAngle}
           fill={fill}
@@ -207,36 +211,6 @@ export default function AnalyticsPage() {
         />
       </g>
     );
-  };
-
-  // Custom Pie Chart Tooltip
-  const CustomPieTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-xl backdrop-blur-md">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
-            <span className="font-bold text-sm text-foreground">{data.name}</span>
-          </div>
-          <div className="space-y-1 text-xs text-muted-foreground">
-            <p className="flex justify-between gap-6">
-              <span>Amount Spent:</span>
-              <span className="font-semibold text-foreground">₹{data.amount.toLocaleString('en-IN')}</span>
-            </p>
-            <p className="flex justify-between gap-6">
-              <span>Percentage:</span>
-              <span className="font-semibold text-foreground">{data.percentage.toFixed(1)}%</span>
-            </p>
-            <p className="flex justify-between gap-6">
-              <span>Transactions:</span>
-              <span className="font-semibold text-foreground">{data.count}</span>
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return null;
   };
 
   return (
@@ -405,14 +379,20 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Spending by Category Doughnut Chart */}
-            <div className="rounded-[32px] bg-card border border-border/50 p-8 shadow-sm flex flex-col justify-between">
-              <div>
+            <div 
+              onPointerDown={() => setSelectedCategoryId(null)}
+              className="rounded-[32px] bg-card border border-border/50 p-8 shadow-sm flex flex-col justify-between"
+            >
+              <div onPointerDown={(e) => e.stopPropagation()}>
                 <h3 className="text-xl font-bold mb-1">Spending by Category</h3>
-                <p className="text-xs text-muted-foreground mb-4">Click a slice to filter transaction list</p>
+                <p className="text-xs text-muted-foreground mb-4">Tap a slice or legend card to view details</p>
               </div>
               
               {/* Doughnut Chart Canvas */}
-              <div className="relative h-60 w-full flex items-center justify-center">
+              <div 
+                className="relative h-60 w-full flex items-center justify-center"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -428,55 +408,116 @@ export default function AnalyticsPage() {
                         dataKey: "amount",
                         stroke: "none",
                         cornerRadius: 6,
-                        onMouseEnter: (_: any, index: number) => setActivePieIndex(index),
-                        onMouseLeave: () => setActivePieIndex(null),
-                        onClick: (_: any, index: number) => {
-                          const cat = categorySpending[index];
-                          if (cat) handleCategoryClick(cat.id);
-                        },
-                        className: "cursor-pointer"
+                        className: "cursor-pointer",
+                        isAnimationActive: false
                       } as any)}
+                      onClick={(_data: any, index: number, e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        const clickedCategory = categorySpending[index];
+                        if (clickedCategory) {
+                          handleCategoryClick(clickedCategory.id);
+                        }
+                      }}
                     >
                       {categorySpending.map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
                           fill={entry.color} 
                           className={cn(
-                            "transition-opacity duration-300", 
+                            "transition-opacity duration-300 cursor-pointer", 
                             selectedCategoryId && selectedCategoryId !== entry.id ? "opacity-40" : "opacity-100"
                           )}
                         />
                       ))}
                     </Pie>
-                    <RechartsTooltip content={<CustomPieTooltip />} wrapperStyle={{ zIndex: 9999 }} />
                   </PieChart>
                 </ResponsiveContainer>
 
-                {/* Centered Total Expenses */}
+                {/* Clickable transparent center area — deselects on tap */}
+                <div 
+                  className="absolute rounded-full cursor-pointer"
+                  style={{ width: 136, height: 136 }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    if (selectedCategoryId !== null) {
+                      setSelectedCategoryId(null);
+                    }
+                  }}
+                />
+
+                {/* Centered Content: Default Total Expenses or Category Details Card */}
                 <div className="absolute z-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                  <span className="text-2xl font-extrabold tracking-tight text-foreground">
-                    ₹{totalExpenses.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
-                    Total Expenses
-                  </span>
+                  <AnimatePresence mode="wait">
+                    {selectedCategoryId === null ? (
+                      <motion.div
+                        key="total-expenses"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex flex-col items-center justify-center"
+                      >
+                        <span className="text-2xl font-extrabold tracking-tight text-foreground">
+                          ₹{totalExpenses.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
+                          Total Expenses
+                        </span>
+                      </motion.div>
+                    ) : (() => {
+                      const activeCat = categorySpending.find(c => c.id === selectedCategoryId);
+                      if (!activeCat) return null;
+                      return (
+                        <motion.div 
+                          key={`category-${selectedCategoryId}`}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex flex-col items-center justify-center bg-card/90 border border-border/40 rounded-2xl p-2.5 shadow-lg backdrop-blur-md min-w-[130px] max-w-[140px]"
+                        >
+                          <div 
+                            className="w-7 h-7 rounded-xl flex items-center justify-center mb-1" 
+                            style={{ backgroundColor: `${activeCat.color}15`, color: activeCat.color }}
+                          >
+                            <CategoryIcon name={activeCat.icon} className="w-4 h-4" />
+                          </div>
+                          <span className="font-bold text-[11px] truncate max-w-[120px] text-foreground mb-0.5">
+                            {activeCat.name}
+                          </span>
+                          <span className="text-xs font-extrabold text-foreground">
+                            ₹{activeCat.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground font-semibold mt-0.5">
+                            {activeCat.percentage.toFixed(0)}% • {activeCat.count} {activeCat.count === 1 ? 'Tx' : 'Txs'}
+                          </span>
+                        </motion.div>
+                      );
+                    })()}
+                  </AnimatePresence>
                 </div>
               </div>
 
               {/* Styled Interactive Legend */}
-              <div className="grid grid-cols-2 gap-2 mt-4 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
+              <div 
+                className="grid grid-cols-2 gap-2 mt-4 max-h-36 overflow-y-auto pr-1 custom-scrollbar"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
                 {categorySpending.map((cat) => {
                   const isSelected = selectedCategoryId === cat.id;
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => handleCategoryClick(cat.id)}
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        handleCategoryClick(cat.id);
+                      }}
                       className={cn(
                         "flex items-center justify-between p-2.5 rounded-xl border text-left transition-all duration-300",
                         isSelected 
-                          ? "border-primary bg-primary/5 shadow-xs" 
+                          ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20" 
                           : "border-border/30 hover:border-border hover:bg-secondary/40",
-                        selectedCategoryId && !isSelected ? "opacity-60" : "opacity-100"
+                        selectedCategoryId && !isSelected ? "opacity-50" : "opacity-100"
                       )}
                     >
                       <div className="flex items-center gap-2 min-w-0">
