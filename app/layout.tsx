@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   title: "MoneyWave",
   description: "Modern Offline-First Personal Finance Manager",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/192.png", sizes: "192x192", type: "image/png" },
+      { url: "/512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/192.png",
+  },
 };
 
 export const viewport: Viewport = {
