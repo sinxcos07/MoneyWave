@@ -3,13 +3,7 @@
 import { useState, useMemo } from "react";
 import { useFinanceStore } from "@/stores/useFinanceStore";
 import { 
-  BarChart, 
-  Bar, 
   ResponsiveContainer, 
-  XAxis, 
-  YAxis, 
-  Tooltip as RechartsTooltip, 
-  CartesianGrid,
   PieChart,
   Pie,
   Cell,
@@ -22,15 +16,10 @@ import {
   format 
 } from "date-fns";
 import { 
-  TrendingUp, 
-  TrendingDown, 
-  Tag, 
   Calendar, 
   Wallet as WalletIcon, 
   X, 
   Grid,
-  ArrowUpRight,
-  ArrowDownLeft,
   MoreHorizontal
 } from "lucide-react";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -99,20 +88,7 @@ export default function AnalyticsPage() {
       .reduce((sum, t) => sum + t.amount, 0);
   }, [filteredTransactions]);
 
-  // 3. Wallet wise spending (Respecting all currently selected filters)
-  const walletSpending = useMemo(() => {
-    // If a specific wallet is selected, we only show that wallet's spending
-    const targets = selectedWalletId === "all" 
-      ? wallets 
-      : wallets.filter(w => w.id === selectedWalletId);
 
-    return targets.map(w => {
-      const spent = filteredTransactions
-        .filter(t => t.walletId === w.id && t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-      return { name: w.name, spent };
-    }).filter(w => w.spent > 0);
-  }, [wallets, filteredTransactions, selectedWalletId]);
 
   // 4. Category Wise Spending (Expenses only, sorted highest to lowest)
   const categorySpending = useMemo(() => {
@@ -154,32 +130,7 @@ export default function AnalyticsPage() {
     return idx !== -1 ? idx : null;
   }, [categorySpending, selectedCategoryId]);
 
-  // 5. Calculate summary cards
-  const summary = useMemo(() => {
-    if (categorySpending.length === 0) {
-      return {
-        highest: { name: "N/A", amount: 0, percentage: 0 },
-        lowest: { name: "N/A", amount: 0 },
-        totalCategoriesCount: 0
-      };
-    }
-    
-    const highest = categorySpending[0];
-    const lowest = categorySpending[categorySpending.length - 1];
-    
-    return {
-      highest: {
-        name: highest.name,
-        amount: highest.amount,
-        percentage: highest.percentage
-      },
-      lowest: {
-        name: lowest.name,
-        amount: lowest.amount
-      },
-      totalCategoriesCount: categorySpending.length
-    };
-  }, [categorySpending]);
+
 
   // 6. Interactive category transaction list
   const displayedTransactions = useMemo(() => {
@@ -268,117 +219,8 @@ export default function AnalyticsPage() {
           animate="show"
           className="space-y-8"
         >
-          {/* Summary Cards */}
-          <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Highest Spending Category */}
-            <motion.div
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-[24px] bg-card border border-border/50 p-6 shadow-sm flex flex-col justify-between h-36"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Highest Spending Category</span>
-                <div className="w-10 h-10 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-              </div>
-              <div>
-                <h4 className="text-2xl font-extrabold tracking-tight">
-                  ₹{summary.highest.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/10">
-                    {summary.highest.name}
-                  </span>
-                  {summary.highest.percentage > 0 && (
-                    <span className="text-[11px] text-muted-foreground font-medium">
-                      {summary.highest.percentage.toFixed(0)}% of total
-                    </span>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Lowest Spending Category */}
-            <motion.div
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-[24px] bg-card border border-border/50 p-6 shadow-sm flex flex-col justify-between h-36"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Lowest Spending Category</span>
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5" />
-                </div>
-              </div>
-              <div>
-                <h4 className="text-2xl font-extrabold tracking-tight">
-                  ₹{summary.lowest.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/10">
-                    {summary.lowest.name}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Total Expense Categories */}
-            <motion.div
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-[24px] bg-card border border-border/50 p-6 shadow-sm flex flex-col justify-between h-36"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Total Expense Categories</span>
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
-                  <Tag className="w-5 h-5" />
-                </div>
-              </div>
-              <div>
-                <h4 className="text-3xl font-extrabold tracking-tight text-indigo-500">
-                  {summary.totalCategoriesCount}
-                </h4>
-                <p className="text-[11px] text-muted-foreground font-medium mt-1">
-                  Active categories in selected range
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Charts Grid */}
-          <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Wallet Wise Spending Chart */}
-            <div className="rounded-[32px] bg-card border border-border/50 p-8 shadow-sm flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-bold mb-1">Wallet Wise Spending</h3>
-                <p className="text-xs text-muted-foreground mb-6">Total expenses grouped by wallet</p>
-              </div>
-              <div className="h-72 flex items-center justify-center">
-                {walletSpending.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={walletSpending}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--muted-foreground)', fontSize: 12}} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--muted-foreground)', fontSize: 12}} dx={-10} />
-                      <RechartsTooltip 
-                        cursor={{fill: 'var(--secondary)', opacity: 0.4}}
-                        contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: 'var(--card)', color: 'var(--card-foreground)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}
-                        itemStyle={{ color: 'var(--primary)' }}
-                        formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Spent']}
-                      />
-                      <Bar dataKey="spent" fill="var(--primary)" radius={[6, 6, 0, 0]} maxBarSize={50} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="text-muted-foreground text-sm">
-                    No wallet spending matches current filters.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Spending by Category Doughnut Chart */}
+          {/* Spending by Category Doughnut Chart */}
+          <motion.div variants={itemVariants}>
             <div 
               onPointerDown={() => setSelectedCategoryId(null)}
               className="rounded-[32px] bg-card border border-border/50 p-8 shadow-sm flex flex-col justify-between"

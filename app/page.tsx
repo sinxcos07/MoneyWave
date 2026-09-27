@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { startOfMonth, format } from "date-fns";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export default function Dashboard() {
   const profile = useFinanceStore(state => state.profile);
@@ -20,21 +19,6 @@ export default function Dashboard() {
   const incomeThisMonth = currentMonthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
   const expenseThisMonth = currentMonthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
   const savingsThisMonth = incomeThisMonth - expenseThisMonth;
-
-  // Simple daily spending trend for the chart
-  const dailyData = currentMonthTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((acc, t) => {
-      const day = format(t.date, "dd MMM");
-      if (!acc[day]) acc[day] = 0;
-      acc[day] += t.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-  const chartData = Object.keys(dailyData).map(day => ({
-    name: day,
-    amount: dailyData[day]
-  })).reverse();
 
   return (
     <div className="space-y-8 pb-20">
@@ -80,67 +64,41 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Spending Trend Chart */}
-        <div className="lg:col-span-2 rounded-[24px] bg-card border border-border/50 p-6 shadow-sm">
-          <h3 className="font-semibold text-lg mb-6">Spending Trend</h3>
-          <div className="h-64">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--muted-foreground)'}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--muted-foreground)'}} dx={-10} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: 'var(--card)', color: 'var(--card-foreground)' }}
-                    itemStyle={{ color: 'var(--expense)' }}
-                    formatter={(value: any) => [`₹${Number(value)}`, 'Spent']}
-                  />
-                  <Line type="monotone" dataKey="amount" stroke="var(--expense)" strokeWidth={3} dot={{r: 4, fill: 'var(--expense)', strokeWidth: 0}} activeDot={{r: 6}} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">Not enough data to show trend.</div>
-            )}
-          </div>
+      {/* Recent Transactions */}
+      <div className="rounded-[24px] bg-card border border-border/50 p-6 shadow-sm flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-semibold text-lg">Recent Transactions</h3>
+          <Link href="/transactions" className="text-sm text-primary font-medium hover:underline">View All</Link>
         </div>
+        
+        <div className="flex-1 space-y-4">
+          {transactions.slice(0, 6).map(t => {
+            const category = categories.find(c => c.id === t.categoryId);
+            const isIncome = t.type === 'income';
 
-        {/* Recent Transactions */}
-        <div className="rounded-[24px] bg-card border border-border/50 p-6 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-lg">Recent</h3>
-            <Link href="/transactions" className="text-sm text-primary font-medium hover:underline">View All</Link>
-          </div>
-          
-          <div className="flex-1 space-y-4">
-            {transactions.slice(0, 4).map(t => {
-              const category = categories.find(c => c.id === t.categoryId);
-              const isIncome = t.type === 'income';
-
-              return (
-                <div key={t.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-opacity-10 ${isIncome ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}`}>
-                      {isIncome ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <h4 className="font-medium leading-none mb-1">{category?.name || 'Unknown'}</h4>
-                      <p className="text-xs text-muted-foreground">{format(t.date, "MMM d")}</p>
-                    </div>
+            return (
+              <div key={t.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-opacity-10 ${isIncome ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}`}>
+                    {isIncome ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                   </div>
-                  <div className={`font-semibold ${isIncome ? 'text-primary' : 'text-foreground'}`}>
-                    {isIncome ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                  <div>
+                    <h4 className="font-medium leading-none mb-1">{category?.name || 'Unknown'}</h4>
+                    <p className="text-xs text-muted-foreground">{format(t.date, "MMM d")}</p>
                   </div>
                 </div>
-              );
-            })}
-            
-            {transactions.length === 0 && (
-              <div className="text-center py-10 text-muted-foreground text-sm">
-                No recent transactions.
+                <div className={`font-semibold ${isIncome ? 'text-primary' : 'text-foreground'}`}>
+                  {isIncome ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })}
+          
+          {transactions.length === 0 && (
+            <div className="text-center py-10 text-muted-foreground text-sm">
+              No recent transactions.
+            </div>
+          )}
         </div>
       </div>
     </div>
